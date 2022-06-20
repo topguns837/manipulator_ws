@@ -1,0 +1,6 @@
+[submodule "src/ros_deep_learning"]
+	path = src/ros_deep_learning
+	url = https://github.com/dusty-nv/ros_deep_learning
+[submodule "src/tmr_ros1"]
+	path = src/tmr_ros1
+	url = https://github.com/TechmanRobotInc/tmr_ros1/
