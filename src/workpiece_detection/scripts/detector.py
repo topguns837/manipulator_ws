@@ -29,6 +29,8 @@ fps = -1
 
 
 class WorkpieceDetector :
+    
+
     def __init__(self):
         self.frame_count = 0
         self.total_frames = 0
@@ -236,13 +238,14 @@ class WorkpieceDetector :
 
 def main():
     rospy.init_node('workpiece_detection' , anonymous=True)
-    try :
+    #try :
 
-        wd = WorkpieceDetector()
-        wd.run()
-    except:
+    wd = WorkpieceDetector()
+    wd.run()
+    #except:
+        #print("except")
 
-        cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
 
 main()
