@@ -15,7 +15,7 @@ from moveit_commander.conversions import pose_to_list
 import tf2_msgs.msg
 import tf
 import numpy as np
-#from mask import ImageProcessing
+from mask import ImageProcessing
 import cv2
 #goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
 
@@ -28,10 +28,10 @@ class UR5:
     flag=0
     rospy.loginfo("===========Robot in motion. Please wait=============")
     while(flag == 0):
-        try:
-            (trans,rot) = listener.lookupTransform('base', 'tool0', rospy.Time(0))
+        try :
+          (trans,rot) = listener.lookupTransform('base', 'tool0', rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            continue
+          continue
 
         x_cord = round(trans[0],3)
         y_cord = round(trans[1],3)
@@ -158,7 +158,7 @@ class UR5:
         msg.speed = 100
       pub.publish(msg)
   
-  def fix_error(self,current_pose) :
+  def fix_error(self,goalList) :
     [j1,j2,j3,j4,j5,j6] = goalList[0],goalList[1],goalList[2],goalList[3],goalList[4],goalList[5]
 
     cap = cv2.VideoCapture(0)
@@ -192,6 +192,7 @@ class UR5:
             time.sleep(0.5)
           j5 = count*(0.5)
           flag_x = False
+          rospy.loginfo("ERROR FIXED")
           time.sleep(0.5)
 
         else:
@@ -210,6 +211,9 @@ class UR5:
         
         if cv2.waitKey(1) & 0xFF == ord('q'):
           break
+
+    cap.release()
+    cv2.destroyAllWindows()
     return 
       
 def main():
@@ -225,11 +229,11 @@ def main():
     
     ur5.go_to_joint_state(j11,j12,j13,j14,j15,j16)
     time.sleep(5)
-    #ur5.fix_error(goalList[0])
-    #time.sleep(5)
+    ur5.fix_error(goalList[0])
+    time.sleep(5)
     ur5.go_to_joint_state(j21,j22,j23,j24,j25,j26)
     time.sleep(5)
-    ur5.go_to_joint_state(j31,j32,j33,j34,j35,j36)
+    #ur5.go_to_joint_state(j31,j32,j33,j34,j35,j36)
 
     
     
