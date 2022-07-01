@@ -27,69 +27,52 @@ class ImageProcessing:
 
 
 	def publish(self , frame):
-        try :
-
-		    self.frame=frame
-    
-		    blurred = cv2.GaussianBlur(self.frame, (11, 11), 0)
-
-		    hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-
-		    mask = cv2.inRange(hsv, self.lower, self.upper)
-
-		    mask = cv2.erode(mask, None, iterations=2)
-
-		    mask = cv2.dilate(mask, None, iterations=2)
-
-		    cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-		    	cv2.CHAIN_APPROX_SIMPLE)
-
-		    cnts = imutils.grab_contours(cnts)
-    
-		    if len(cnts) > 0:
-		    	c = max(cnts, key=cv2.contourArea)
-		    	self.x, self.y , self.w , self.h = cv2.boundingRect(c)
-		    	cv2.rectangle(frame , (self.x , self.y) , (self.x + self.w , self.y + self.h) , (36,255,12) , 2)
-
-    
-		    xcenter = self.frame.shape[1]/2
-		    ycenter = self.frame.shape[0]/2
-
-		    obj_xcenter = self.x + self.w/2
-		    obj_ycenter = self.y + self.h/2
-
-		    cv2.line(self.frame , (int(xcenter) , 0) , (int(xcenter) , int(2*ycenter)) , (255,0,0) , 5)
-		    cv2.line(self.frame , (0 , int(ycenter)) , (int(xcenter*2) , int(ycenter)) , (255,0,0) , 5)
-		    cv2.circle(self.frame , (int(obj_xcenter) , int(obj_ycenter)) , 5 , (0,0,255) , -1)		
-
-		    linear_x , linear_y , linear_z = [0]*3 
-
-		    if xcenter > obj_xcenter + self.w/2 :
-		    	linear_x = -1
+		try :
+			self.frame=frame
+			blurred = cv2.GaussianBlur(self.frame, (11, 11), 0)
+			hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+			mask = cv2.inRange(hsv, self.lower, self.upper)
+			mask = cv2.erode(mask, None, iterations=2)
+			mask = cv2.dilate(mask, None, iterations=2)
+			cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+			cnts = imutils.grab_contours(cnts)
+			if len(cnts) > 0:
+				c = max(cnts, key=cv2.contourArea)
+				self.x, self.y , self.w , self.h = cv2.boundingRect(c)
+				cv2.rectangle(frame , (self.x , self.y) , (self.x + self.w , self.y + self.h) , (36,255,12) , 2)
+			xcenter = self.frame.shape[1]/2
+			ycenter = self.frame.shape[0]/2
+			obj_xcenter = self.x + self.w/2
+			obj_ycenter = self.y + self.h/2
+			cv2.line(self.frame , (int(xcenter) , 0) , (int(xcenter) , int(2*ycenter)) , (255,0,0) , 5)
+			cv2.line(self.frame , (0 , int(ycenter)) , (int(xcenter*2) , int(ycenter)) , (255,0,0) , 5)
+			cv2.circle(self.frame , (int(obj_xcenter) , int(obj_ycenter)) , 5 , (0,0,255) , -1)
+			
+			linear_x , linear_y , linear_z = [0]*3 
+			
+			if xcenter > obj_xcenter + self.w/2 :
+				linear_x = -1
 		    	#self.velocity_msg.linear.x = -1
-		    elif xcenter < obj_xcenter - self.w/2 :
-		    	linear_x = 1
+			elif xcenter < obj_xcenter - self.w/2 :
+				linear_x = 1
 		    	#self.velocity_msg.linear.x = 1
-		    else:
+			else:
 		    	#self.velocity_msg.linear.x = 0
-		    	linear_x = 0
-
-		    if ycenter > obj_ycenter + self.h/2 :
-		    	linear_y = 1
+				linear_x = 0
+			if ycenter > obj_ycenter + self.h/2 :
+				linear_y = 1
 		    	#self.velocity_msg.linear.y = 1
-		    elif ycenter < obj_ycenter - self.h/2 :
-		    	linear_y = -1
+			elif ycenter < obj_ycenter - self.h/2 :
+				linear_y = -1
 		    	#self.velocity_msg.linear.y = -1
-		    else:
-		    	linear_y = 0
+			else:
+				linear_y = 0
 		    	#self.velocity_msg.linear.y = 0
 
 		    #self.pub.publish(self.velocity_msg)
-    
-		    result = [self.frame , linear_x , linear_y]
-
-        except :
-            result = [self.frame , 0 , 0 ]
+			result = [self.frame , linear_x , linear_y]
+		except :
+			result = [self.frame , 0 , 0 ]
 		
 		return result
 
@@ -116,6 +99,8 @@ if __name__=="__main__":
 
 			if cv2.waitKey(1) & 0xFF == ord('q'):
 				break
+	cap.release()
+	cv2.destroyAllWindows()
 			
             	
 
@@ -130,5 +115,3 @@ if __name__=="__main__":
 	#cv2.waitKey(0)
 
 
-cap.release()
-cv2.destroyAllWindows()
