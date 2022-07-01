@@ -14,6 +14,8 @@ from moveit_commander.conversions import pose_to_list
 import tf2_msgs.msg
 import tf
 import numpy as np
+from mask import ImageProcessing
+import cv2
 
 
 class UR5:
@@ -141,187 +143,64 @@ class UR5:
         pub.publish(msg)
         r.sleep()
         n=n+1
+  
+  def fix_error(self) :
+    cap = cv2.VideoCapture(1)
+
+    flag_x = True
+    flag_y = True
+
+    ip = ImageProcessing((20, 100 , 100 ),( 30 , 255, 255))
+    while (cap.isOpened() ) and ( flag_x or flag_y ):
+
+		  ret , frame = cap.read()
+      
+		  if ret :			
+			  result=ip.publish()
+
+        
+          
+        if result[1]== 1 :
+          j1 += 0.5
+
+        elif result[1] == -1 :
+          j1 += -0.5
+
+        else:
+          flag_x = False
+
+
+        if result[2]== 1 :
+          j2 += 0.5
+
+        elif result[2] == -1 :
+          j2 += -0.5
+
+        else:
+          flag_y = False             
+
+
+			  cv2.imshow("Frame" ,result[0])
+			  cv2.waitKey(1)
+
+			  if cv2.waitKey(1) & 0xFF == ord('q'):
+				  break
 
 
 def main():
   try:
-      ur5_pose_home = geometry_msgs.msg.Pose()
-      ur5_pose_home.position.x = -0.254
-      ur5_pose_home.position.y = 0.128
-      ur5_pose_home.position.z = 0.307
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_home.orientation.x = quaternion[0]
-      ur5_pose_home.orientation.y = quaternion[1]
-      ur5_pose_home.orientation.z = quaternion[2]
-      ur5_pose_home.orientation.w = quaternion[3]
-
-      ur5_pose_pick = geometry_msgs.msg.Pose()
-      ur5_pose_pick.position.x = -0.412
-      ur5_pose_pick.position.y = 0.150
-      ur5_pose_pick.position.z = 0.319
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_pick.orientation.x = quaternion[0]
-      ur5_pose_pick.orientation.y = quaternion[1]
-      ur5_pose_pick.orientation.z = quaternion[2]
-      ur5_pose_pick.orientation.w = quaternion[3]
-
-      ur5_pose_place = geometry_msgs.msg.Pose()
-      ur5_pose_place.position.x = -0.420
-      ur5_pose_place.position.y = -0.134
-      ur5_pose_place.position.z = 0.312
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_place.orientation.x = quaternion[0]
-      ur5_pose_place.orientation.y = quaternion[1]
-      ur5_pose_place.orientation.z = quaternion[2]
-      ur5_pose_place.orientation.w = quaternion[3]
-
-      ur5_pose_drop = geometry_msgs.msg.Pose()
-      ur5_pose_drop.position.x = -0.482
-      ur5_pose_drop.position.y = -0.176
-      ur5_pose_drop.position.z = 0.186
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_drop.orientation.x = quaternion[0]
-      ur5_pose_drop.orientation.y = quaternion[1]
-      ur5_pose_drop.orientation.z = quaternion[2]
-      ur5_pose_drop.orientation.w = quaternion[3]
-
-      ur5_pose_0 = geometry_msgs.msg.Pose()
-      ur5_pose_0.position.x = 0.65
-      ur5_pose_0.position.y = 0.145
-      ur5_pose_0.position.z = 0.2
-      quaternion = tf.transformations.quaternion_from_euler(-3.14,0,1.54)
-      ur5_pose_0.orientation.x = quaternion[0]
-      ur5_pose_0.orientation.y = quaternion[1]
-      ur5_pose_0.orientation.z = quaternion[2]
-      ur5_pose_0.orientation.w = quaternion[3]
-
-      ur5_pose_1 = geometry_msgs.msg.Pose()
-      ur5_pose_1.position.x = 0.65
-      ur5_pose_1.position.y = 0.145
-      ur5_pose_1.position.z = 0.14
-      quaternion = tf.transformations.quaternion_from_euler(-3.14,0,1.54)
-      ur5_pose_1.orientation.x = quaternion[0]
-      ur5_pose_1.orientation.y = quaternion[1]
-      ur5_pose_1.orientation.z = quaternion[2]
-      ur5_pose_1.orientation.w = quaternion[3]
-
-      ur5_pose_2 = geometry_msgs.msg.Pose()
-      ur5_pose_2.position.x = 0.190
-      ur5_pose_2.position.y = 0.145
-      ur5_pose_2.position.z = 0.3
-      quaternion = tf.transformations.quaternion_from_euler(-3.14,0,1.54)
-      ur5_pose_2.orientation.x = quaternion[0]
-      ur5_pose_2.orientation.y = quaternion[1]
-      ur5_pose_2.orientation.z = quaternion[2]
-      ur5_pose_2.orientation.w = quaternion[3]
-
-      ur5_pose_5 = geometry_msgs.msg.Pose()
-      ur5_pose_5.position.x = 0.140
-      ur5_pose_5.position.y = 0.2
-      ur5_pose_5.position.z = 0.3
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,3.14)
-      ur5_pose_5.orientation.x = quaternion[0]
-      ur5_pose_5.orientation.y = quaternion[1]
-      ur5_pose_5.orientation.z = quaternion[2]
-      ur5_pose_5.orientation.w = quaternion[3]
-
-      ur5_pose_3 = geometry_msgs.msg.Pose()
-      ur5_pose_3.position.x = -0.190
-      ur5_pose_3.position.y = 0.145
-      ur5_pose_3.position.z = 0.2
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,-1.54)
-      ur5_pose_3.orientation.x = quaternion[0]
-      ur5_pose_3.orientation.y = quaternion[1]
-      ur5_pose_3.orientation.z = quaternion[2]
-      ur5_pose_3.orientation.w = quaternion[3]
-
-      ur5_pose_4 = geometry_msgs.msg.Pose()
-      ur5_pose_4.position.x = -0.365
-      ur5_pose_4.position.y = 0
-      ur5_pose_4.position.z = 0.2
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,-1.54)
-      ur5_pose_4.orientation.x = quaternion[0]
-      ur5_pose_4.orientation.y = quaternion[1]
-      ur5_pose_4.orientation.z = quaternion[2]
-      ur5_pose_4.orientation.w = quaternion[3]
-
-      ur5_pose_6 = geometry_msgs.msg.Pose()
-      ur5_pose_6.position.x = -0.365
-      ur5_pose_6.position.y = 0
-      ur5_pose_6.position.z = 0.3
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,-1.54)
-      ur5_pose_6.orientation.x = quaternion[0]
-      ur5_pose_6.orientation.y = quaternion[1]
-      ur5_pose_6.orientation.z = quaternion[2]
-      ur5_pose_6.orientation.w = quaternion[3]
+      
       while True:
           ur5 = UR5()
-          #print( "============ Press `Enter` to execute a movement using a pose goal ...")
-          #raw_input()
-          #print("POSE 4")
 
-          ur5.go_to_pose_goal(ur5_pose_home)
-          ur5.trajectory_execution_status(ur5_pose_home)
-
-          ur5.go_to_pose_goal(ur5_pose_pick)
-          ur5.trajectory_execution_status(ur5_pose_pick)
-
-          ur5.go_to_pose_goal(ur5_pose_place)
-          ur5.trajectory_execution_status(ur5_pose_place)
-
-          ur5.go_to_pose_goal(ur5_pose_drop)
-          ur5.trajectory_execution_status(ur5_pose_drop)
+          ur5.fix_error()
 
           
 
-          '''ur5.go_to_pose_goal(ur5_pose_6)
-          ur5.trajectory_execution_status(ur5_pose_6)
-          #ur5.gripper_motion(1)
+
+
           
-          ur5.go_to_joint_state()
-          #time.sleep(4)
-          ur5.go_to_pose_goal(ur5_pose_0)
-          ur5.trajectory_execution_status(ur5_pose_0)
-          #time.sleep(1)
-          #ur5.gripper_motion(1)
 
-          ur5.go_to_pose_goal(ur5_pose_1)
-          ur5.trajectory_execution_status(ur5_pose_1)
-          time.sleep(1)
-          #ur5.gripper_motion(0)
-
-          ur5.go_to_pose_goal(ur5_pose_0)
-          ur5.trajectory_execution_status(ur5_pose_0)
-          time.sleep(1)
-
-          ur5.go_to_pose_goal(ur5_pose_2)
-          ur5.trajectory_execution_status(ur5_pose_2)
-          
-          ur5.go_to_joint_state()
-          time.sleep(4)
-
-          ur5.go_to_pose_goal(ur5_pose_5)
-          ur5.trajectory_execution_status(ur5_pose_5)
-          time.sleep(1)
-
-          ur5.go_to_pose_goal(ur5_pose_3)
-          ur5.trajectory_execution_status(ur5_pose_3)
-          time.sleep(1)
-          #ur5.gripper_motion(2)
-
-          ur5.go_to_pose_goal(ur5_pose_6)
-          ur5.trajectory_execution_status(ur5_pose_6)
-
-          ur5.go_to_pose_goal(ur5_pose_4)
-          ur5.trajectory_execution_status(ur5_pose_4)
-          time.sleep(1)
-          #ur5.gripper_motion(1)
-          ur5.go_to_pose_goal(ur5_pose_2)
-          ur5.trajectory_execution_status(ur5_pose_2)
-          #ur5.gripper_motion(2)
-          #ch = raw_input("Do you want to give more inputs (y/n): ")
-          if ch == 'n':
-              break'''
 
   except rospy.ROSInterruptException:
     return
