@@ -15,9 +15,77 @@ from moveit_commander.conversions import pose_to_list
 import tf2_msgs.msg
 import tf
 import numpy as np
-#from mask import ImageProcessing
 import cv2
+import imutils
 #goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
+
+class ImageProcessing:
+	def __init__(self,frame , lower=(29, 86, 6), upper=(64, 255, 255)):
+		
+	
+		self.lower = lower  # The lower limit of the colour range in the form of RGB Values
+		self.upper = upper  # The Upper limit of the colour range in the form of RGB Values
+		self.radius = None  # The radius of the Circle drawn around the object
+		self.center = None  # The center of the circle drawn around the object
+		#self.velocity_msg = Twist()
+		#self.pub = rospy.Publisher('/fix_error', Twist, queue_size=10) 
+		self.x,self.y,self.w,self.h = [0]*4		
+		
+
+		#self.process_image()
+		#self.publish()
+
+
+	def publish(self , frame):
+		try :
+			self.frame=frame
+			blurred = cv2.GaussianBlur(self.frame, (11, 11), 0)
+			hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+			mask = cv2.inRange(hsv, self.lower, self.upper)
+			mask = cv2.erode(mask, None, iterations=2)
+			mask = cv2.dilate(mask, None, iterations=2)
+			cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+			cnts = imutils.grab_contours(cnts)
+			if len(cnts) > 0:
+				c = max(cnts, key=cv2.contourArea)
+				self.x, self.y , self.w , self.h = cv2.boundingRect(c)
+				cv2.rectangle(frame , (self.x , self.y) , (self.x + self.w , self.y + self.h) , (36,255,12) , 2)
+			xcenter = self.frame.shape[1]/2
+			ycenter = self.frame.shape[0]/2
+			obj_xcenter = self.x + self.w/2
+			obj_ycenter = self.y + self.h/2
+			cv2.line(self.frame , (int(xcenter) , 0) , (int(xcenter) , int(2*ycenter)) , (255,0,0) , 5)
+			cv2.line(self.frame , (0 , int(ycenter)) , (int(xcenter*2) , int(ycenter)) , (255,0,0) , 5)
+			cv2.circle(self.frame , (int(obj_xcenter) , int(obj_ycenter)) , 5 , (0,0,255) , -1)
+			
+			linear_x , linear_y , linear_z = [0]*3 
+			
+			if xcenter > obj_xcenter + self.w/2 :
+				linear_x = -1
+		    	#self.velocity_msg.linear.x = -1
+			elif xcenter < obj_xcenter - self.w/2 :
+				linear_x = 1
+		    	#self.velocity_msg.linear.x = 1
+			else:
+		    	#self.velocity_msg.linear.x = 0
+				linear_x = 0
+			if ycenter > obj_ycenter + self.h/2 :
+				linear_y = 1
+		    	#self.velocity_msg.linear.y = 1
+			elif ycenter < obj_ycenter - self.h/2 :
+				linear_y = -1
+		    	#self.velocity_msg.linear.y = -1
+			else:
+				linear_y = 0
+		    	#self.velocity_msg.linear.y = 0
+
+		    #self.pub.publish(self.velocity_msg)
+			result = [self.frame , linear_x , linear_y]
+		except :
+			result = [self.frame , 0 , 0 ]
+		
+		return result
+
 
 
 class UR5:
@@ -28,10 +96,10 @@ class UR5:
     flag=0
     rospy.loginfo("===========Robot in motion. Please wait=============")
     while(flag == 0):
-        try:
-            (trans,rot) = listener.lookupTransform('base', 'tool0', rospy.Time(0))
+        try :
+          (trans,rot) = listener.lookupTransform('base', 'tool0', rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            continue
+          continue
 
         x_cord = round(trans[0],3)
         y_cord = round(trans[1],3)
@@ -158,44 +226,109 @@ class UR5:
         msg.speed = 100
       pub.publish(msg)
   
-  def fix_error(self,current_pose) :
-    [j1,j2,j3,j4,j5,j6] = goalList[0],goalList[1],goalList[2],goalList[3],goalList[4],goalList[5]
+  def fix_error_x(self , result ,  pose):
+    [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
+    
+    frame = result[0]
+    count = 0
+    
+    dir = 0
+
+    if result[1] == 1:
+      dir = -1
+      j1 += 0.5
+      count += 1
+      self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+      time.sleep(0.5)
+
+    elif result[1] == -1 :
+      dir = 1
+      j1 -= 0.5
+      count += 1
+      self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+      time.sleep(0.5)
+
+    else :
+      j5 = j5 + count*(0.5)*dir
+
+      return ( False , [j1,j2,j3,j4,j5,j6] )
+
+    return( True , [j1,j2,j3,j4,j5,j6] )
+
+  def fix_error_y(self , result ,  pose):
+    [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
+    
+    
+
+    return( False , [j1,j2,j3,j4,j5,j6] )
+      
+  
+  def fix_error(self,start_pose) :
+    
+    #[j1,j2,j3,j4,j5,j6] = goalList[0],goalList[1],goalList[2],goalList[3],goalList[4],goalList[5]
 
     cap = cv2.VideoCapture(0)
-    flag_x= True
-    
-    flag_y = False
+    flag_x= True  
+
+    temp_x = 0
+
+    flag_y = True
+
     ip = ImageProcessing((20, 100 , 100 ),( 30 , 255, 255))
     
     while (cap.isOpened() ) and ( flag_x or flag_y ):
       ret , frame = cap.read()
       if ret :
         result=ip.publish(frame)
-        count = 0
 
-        if result[1]== 1:
-          while result[1] == 1:
+        if flag_x ==  True :
+          flag_x, start_pose = self.fix_error_x(result, start_pose)
+
+        if flag_x == False and flag_y == True :
+          flag_y, start_pose = self.fix_error_y(result , start_pose)
+
+        cv2.imshow("frame" , frame)
+        cv2.waitKey(1)
+    
+        
+
+        #count = 0
+
+        '''if flag_x == True :
+          if result[1]== 1:
+            #while result[1] == 1:
             j1 += 0.5
             count += 1
             self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
             time.sleep(0.5)
-          j5 = count*(-0.5)
-          self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
-          flag_x = False
-          time.sleep(0.5)
-
-        elif result[1] == -1 :
-          while result[1] == -1:
+            temp_x = 1
+    
+            if temp_x == 1:
+              j5 = count*(-0.5)
+              self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+              flag_x = False
+              time.sleep(0.5)
+    
+          elif result[1] == -1 :
+            #while result[1] == -1:
             j1 -= 0.5
             count += 1
             self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
             time.sleep(0.5)
-          j5 = count*(0.5)
-          flag_x = False
-          time.sleep(0.5)
+            temp_x = 1
+    
+            if temp_x == 1:
+              j5 = count*(0.5)
+              self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+              flag_x = False            
+              time.sleep(0.5)
+    
+          else:
+                rospy.loginfo("X ERROR FIXED")
+                flag_x = False
 
-        else:
-          flag_x = False
+        if flag_y == True :'''
+
         
         
         '''if result[2]== 1 :
@@ -205,11 +338,12 @@ class UR5:
         else:
           flag_y = False'''
           
-        cv2.imshow("Frame" ,result[0])
-        cv2.waitKey(1)
         
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-          break
+        
+        
+
+    cap.release()
+    cv2.destroyAllWindows()
     return 
       
 def main():
@@ -225,11 +359,11 @@ def main():
     
     ur5.go_to_joint_state(j11,j12,j13,j14,j15,j16)
     time.sleep(5)
-    #ur5.fix_error(goalList[0])
-    #time.sleep(5)
+    ur5.fix_error(goalList[0])
+    time.sleep(5)
     ur5.go_to_joint_state(j21,j22,j23,j24,j25,j26)
     time.sleep(5)
-    ur5.go_to_joint_state(j31,j32,j33,j34,j35,j36)
+    #ur5.go_to_joint_state(j31,j32,j33,j34,j35,j36)
 
     
     
@@ -245,3 +379,4 @@ def main():
 
 if __name__ == '__main__':
   main()
+Footer

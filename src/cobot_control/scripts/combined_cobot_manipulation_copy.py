@@ -1,9 +1,12 @@
+
+
 #!/usr/bin/env python
 
 import sys
 import time
 import roslib
 from math import pi
+import math
 import copy
 import rospy
 import moveit_commander
@@ -14,6 +17,9 @@ from moveit_commander.conversions import pose_to_list
 import tf2_msgs.msg
 import tf
 import numpy as np
+from mask import ImageProcessing
+import cv2
+#goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
 
 
 class UR5:
@@ -24,10 +30,10 @@ class UR5:
     flag=0
     rospy.loginfo("===========Robot in motion. Please wait=============")
     while(flag == 0):
-        try:
-            (trans,rot) = listener.lookupTransform('base', 'tool0', rospy.Time(0))
+        try :
+          (trans,rot) = listener.lookupTransform('base', 'tool0', rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            continue
+          continue
 
         x_cord = round(trans[0],3)
         y_cord = round(trans[1],3)
@@ -41,14 +47,14 @@ class UR5:
         diff_rx = rx - (goal_pose.orientation.x)
         diff_ry = ry - (goal_pose.orientation.y)
         diff_rz = rz - (goal_pose.orientation.z)
-        #rospy.loginfo(diff_x)
-        #rospy.loginfo(diff_y)
-        #rospy.loginfo(diff_z)
-        #rospy.loginfo(diff_rx)
-        #rospy.loginfo(diff_ry)
-        #rospy.loginfo(diff_rz)
-        #if(-0.005<diff_x<0.005 and -0.005<diff_y<0.005 and 0.113<diff_z<0.119 and -0.005<diff_rx<0.005 and -0.005<diff_ry<0.005 and -0.005<diff_rz<0.005):
-        if(-0.005<diff_x<0.005 and -0.005<diff_y<0.005 and 0.113<diff_z<0.119):
+        rospy.loginfo(diff_x)
+        rospy.loginfo(diff_y)
+        rospy.loginfo(diff_z)
+        # rospy.loginfo(diff_rx)
+        # rospy.loginfo(diff_ry)
+        # rospy.loginfo(diff_rz)
+        if(-0.01<diff_x<0.5 and -0.01<diff_y<0.5 and -0.01<diff_z<0.5):
+        # if(-1.5<diff_x<1.5 and -1.5<diff_y<1.5 and -1.5<diff_z<1.5):
             flag = 1
             rospy.loginfo("Successfully reached")
         #else:
@@ -68,7 +74,7 @@ class UR5:
     planning_frame = move_group.get_planning_frame()
     eef_link = move_group.get_end_effector_link()
     group_names = robot.get_group_names()
-    print(robot.get_current_state())
+    print (robot.get_current_state())
 
     self.move_group = move_group
 
@@ -88,7 +94,7 @@ class UR5:
     move_group.stop()
     move_group.clear_pose_targets()
 
-  def go_to_joint_state(self):
+  def go_to_joint_state(self,x,y,z,rx,ry,rz):
     # Copy class variables to local variables to make the web tutorials more clear.
     # In practice, you should use the class variables directly unless you have a good
     # reason not to.
@@ -102,13 +108,29 @@ class UR5:
     ## thing we want to do is move it to a slightly better configuration.
     # We can get the joint values from the group and adjust some of the values:
     joint_goal = move_group.get_current_joint_values()
-    if(joint_goal[0]<0):
-      joint_goal[0] = joint_goal[0] + pi
-    else:
-      joint_goal[0] = joint_goal[0] - pi
+    joint_goal[0]=round(math.radians(x),2)
+    joint_goal[1]=round(math.radians(y),2)
+    joint_goal[2]=round(math.radians(z),2)
+    joint_goal[3]=round(math.radians(rx),2)
+    joint_goal[4]=round(math.radians(ry),2)
+    joint_goal[5]=round(math.radians(rz),2)
+    
+    # joint_goal[0]=x
+    # joint_goal[1]=y
+    # joint_goal[2]=z
+    # joint_goal[3]=rx
+    # joint_goal[4]=ry
+    # joint_goal[5]=rz
+    
+
+    # if(joint_goal[0]<0):
+    #   joint_goal[0] = joint_goal[0] + pi
+    # else:
+    #   joint_goal[0] = joint_goal[0] - pi
 
     # The go command can be called with joint values, poses, or without any
     # parameters if you have already set the pose or joint target for the group
+    
     move_group.go(joint_goal, wait=True)
 
     # Calling ``stop()`` ensures that there is no residual movement
@@ -119,213 +141,112 @@ class UR5:
 
 
   def gripper_motion(self,grip):
-    pub = rospy.Publisher('/gripper/ctrl', GripperCtrl, queue_size=10)
-    r = rospy.Rate(10) #10hz
-    msg = GripperCtrl()
-    msg.initialize = False
-    n=0
-    if grip == 0:
-    	msg.position = 0
-    	msg.force = 100
-    	msg.speed = 100
-    if grip == 1:
-    	msg.position = 1000
-    	msg.force = 100
-    	msg.speed = 100
-    if grip == 2:
-    	msg.position = input("Enter Position")
-    	msg.force = 100
-    	msg.speed = 100
-    while n<10:
-        rospy.loginfo(msg)
-        pub.publish(msg)
-        r.sleep()
-        n=n+1
+      pub = rospy.Publisher('/gripper/ctrl', GripperCtrl, queue_size=10)
+      r = rospy.Rate(10) #10hz
+      msg = GripperCtrl()
+      msg.initialize = True
+      n=0
+      if grip == 0:
+        msg.position = 0
+        msg.force = 100
+        msg.speed = 100
+      if grip == 1:
+        msg.position = 1000
+        msg.force = 100
+        msg.speed = 100
+      if grip == 2:
+        msg.position = input("Enter Position")
+        msg.force = 100
+        msg.speed = 100
+      pub.publish(msg)
+  
+  def fix_error(self,goalList) :
+    [j1,j2,j3,j4,j5,j6] = goalList[0],goalList[1],goalList[2],goalList[3],goalList[4],goalList[5]
 
+    cap = cv2.VideoCapture(0)
+    flag_x= True
+    
+    flag_y = False
+    ip = ImageProcessing((20, 100 , 100 ),( 30 , 255, 255))
+    
+    while (cap.isOpened() ) and ( flag_x or flag_y ):
+      ret , frame = cap.read()
+      if ret :
+        result=ip.publish(frame)
+        count = 0
 
+        if result[1]== 1:
+          while result[1] == 1:
+            j1 += 0.5
+            count += 1
+            self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+            time.sleep(0.5)
+          j5 = count*(-0.5)
+          self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+          flag_x = False
+          time.sleep(0.5)
+
+        elif result[1] == -1 :
+          while result[1] == -1:
+            j1 -= 0.5
+            count += 1
+            self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+            time.sleep(0.5)
+          j5 = count*(0.5)
+          flag_x = False
+          rospy.loginfo("ERROR FIXED")
+          time.sleep(0.5)
+
+        else:
+          flag_x = False
+        
+        
+        '''if result[2]== 1 :
+          j2 += 0.5
+        elif result[2] == -1 :
+          j2 += -0.5
+        else:
+          flag_y = False'''
+          
+        cv2.imshow("Frame" ,result[0])
+        cv2.waitKey(1)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+          break
+
+    cap.release()
+    cv2.destroyAllWindows()
+    return 
+      
 def main():
+
   try:
-      ur5_pose_home = geometry_msgs.msg.Pose()
-      ur5_pose_home.position.x = -0.254
-      ur5_pose_home.position.y = 0.128
-      ur5_pose_home.position.z = 0.307
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_home.orientation.x = quaternion[0]
-      ur5_pose_home.orientation.y = quaternion[1]
-      ur5_pose_home.orientation.z = quaternion[2]
-      ur5_pose_home.orientation.w = quaternion[3]
+    goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
+    [j11,j12,j13,j14,j15,j16] = goalList[0][0],goalList[0][1],goalList[0][2],goalList[0][3],goalList[0][4],goalList[0][5]
+    [j21,j22,j23,j24,j25,j26] = goalList[1][0],goalList[1][1],goalList[1][2],goalList[1][3],goalList[1][4],goalList[1][5]
+    [j31,j32,j33,j34,j35,j36] = goalList[2][0],goalList[2][1],goalList[2][2],goalList[2][3],goalList[2][4],goalList[2][5]
 
-      ur5_pose_pick = geometry_msgs.msg.Pose()
-      ur5_pose_pick.position.x = -0.412
-      ur5_pose_pick.position.y = 0.150
-      ur5_pose_pick.position.z = 0.319
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_pick.orientation.x = quaternion[0]
-      ur5_pose_pick.orientation.y = quaternion[1]
-      ur5_pose_pick.orientation.z = quaternion[2]
-      ur5_pose_pick.orientation.w = quaternion[3]
+    ur5=UR5()
+    
+    
+    ur5.go_to_joint_state(j11,j12,j13,j14,j15,j16)
+    time.sleep(5)
+    ur5.fix_error(goalList[0])
+    time.sleep(5)
+    ur5.go_to_joint_state(j21,j22,j23,j24,j25,j26)
+    time.sleep(5)
+    #ur5.go_to_joint_state(j31,j32,j33,j34,j35,j36)
 
-      ur5_pose_place = geometry_msgs.msg.Pose()
-      ur5_pose_place.position.x = -0.420
-      ur5_pose_place.position.y = -0.134
-      ur5_pose_place.position.z = 0.312
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_place.orientation.x = quaternion[0]
-      ur5_pose_place.orientation.y = quaternion[1]
-      ur5_pose_place.orientation.z = quaternion[2]
-      ur5_pose_place.orientation.w = quaternion[3]
-
-      ur5_pose_drop = geometry_msgs.msg.Pose()
-      ur5_pose_drop.position.x = -0.482
-      ur5_pose_drop.position.y = -0.176
-      ur5_pose_drop.position.z = 0.186
-      quaternion = tf.transformations.quaternion_from_euler(2*np.pi , 0 , -np.pi)
-      ur5_pose_drop.orientation.x = quaternion[0]
-      ur5_pose_drop.orientation.y = quaternion[1]
-      ur5_pose_drop.orientation.z = quaternion[2]
-      ur5_pose_drop.orientation.w = quaternion[3]
-
-      ur5_pose_0 = geometry_msgs.msg.Pose()
-      ur5_pose_0.position.x = 0.65
-      ur5_pose_0.position.y = 0.145
-      ur5_pose_0.position.z = 0.2
-      quaternion = tf.transformations.quaternion_from_euler(-3.14,0,1.54)
-      ur5_pose_0.orientation.x = quaternion[0]
-      ur5_pose_0.orientation.y = quaternion[1]
-      ur5_pose_0.orientation.z = quaternion[2]
-      ur5_pose_0.orientation.w = quaternion[3]
-
-      ur5_pose_1 = geometry_msgs.msg.Pose()
-      ur5_pose_1.position.x = 0.65
-      ur5_pose_1.position.y = 0.145
-      ur5_pose_1.position.z = 0.14
-      quaternion = tf.transformations.quaternion_from_euler(-3.14,0,1.54)
-      ur5_pose_1.orientation.x = quaternion[0]
-      ur5_pose_1.orientation.y = quaternion[1]
-      ur5_pose_1.orientation.z = quaternion[2]
-      ur5_pose_1.orientation.w = quaternion[3]
-
-      ur5_pose_2 = geometry_msgs.msg.Pose()
-      ur5_pose_2.position.x = 0.190
-      ur5_pose_2.position.y = 0.145
-      ur5_pose_2.position.z = 0.3
-      quaternion = tf.transformations.quaternion_from_euler(-3.14,0,1.54)
-      ur5_pose_2.orientation.x = quaternion[0]
-      ur5_pose_2.orientation.y = quaternion[1]
-      ur5_pose_2.orientation.z = quaternion[2]
-      ur5_pose_2.orientation.w = quaternion[3]
-
-      ur5_pose_5 = geometry_msgs.msg.Pose()
-      ur5_pose_5.position.x = 0.140
-      ur5_pose_5.position.y = 0.2
-      ur5_pose_5.position.z = 0.3
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,3.14)
-      ur5_pose_5.orientation.x = quaternion[0]
-      ur5_pose_5.orientation.y = quaternion[1]
-      ur5_pose_5.orientation.z = quaternion[2]
-      ur5_pose_5.orientation.w = quaternion[3]
-
-      ur5_pose_3 = geometry_msgs.msg.Pose()
-      ur5_pose_3.position.x = -0.190
-      ur5_pose_3.position.y = 0.145
-      ur5_pose_3.position.z = 0.2
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,-1.54)
-      ur5_pose_3.orientation.x = quaternion[0]
-      ur5_pose_3.orientation.y = quaternion[1]
-      ur5_pose_3.orientation.z = quaternion[2]
-      ur5_pose_3.orientation.w = quaternion[3]
-
-      ur5_pose_4 = geometry_msgs.msg.Pose()
-      ur5_pose_4.position.x = -0.365
-      ur5_pose_4.position.y = 0
-      ur5_pose_4.position.z = 0.2
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,-1.54)
-      ur5_pose_4.orientation.x = quaternion[0]
-      ur5_pose_4.orientation.y = quaternion[1]
-      ur5_pose_4.orientation.z = quaternion[2]
-      ur5_pose_4.orientation.w = quaternion[3]
-
-      ur5_pose_6 = geometry_msgs.msg.Pose()
-      ur5_pose_6.position.x = -0.365
-      ur5_pose_6.position.y = 0
-      ur5_pose_6.position.z = 0.3
-      quaternion = tf.transformations.quaternion_from_euler(3.14,0,-1.54)
-      ur5_pose_6.orientation.x = quaternion[0]
-      ur5_pose_6.orientation.y = quaternion[1]
-      ur5_pose_6.orientation.z = quaternion[2]
-      ur5_pose_6.orientation.w = quaternion[3]
-      while True:
-          ur5 = UR5()
-          #print( "============ Press `Enter` to execute a movement using a pose goal ...")
-          #raw_input()
-          #print("POSE 4")
-
-          ur5.go_to_pose_goal(ur5_pose_home)
-          ur5.trajectory_execution_status(ur5_pose_home)
-
-          ur5.go_to_pose_goal(ur5_pose_pick)
-          ur5.trajectory_execution_status(ur5_pose_pick)
-
-          ur5.go_to_pose_goal(ur5_pose_place)
-          ur5.trajectory_execution_status(ur5_pose_place)
-
-          ur5.go_to_pose_goal(ur5_pose_drop)
-          ur5.trajectory_execution_status(ur5_pose_drop)
-
-          
-
-          '''ur5.go_to_pose_goal(ur5_pose_6)
-          ur5.trajectory_execution_status(ur5_pose_6)
-          #ur5.gripper_motion(1)
-          
-          ur5.go_to_joint_state()
-          #time.sleep(4)
-          ur5.go_to_pose_goal(ur5_pose_0)
-          ur5.trajectory_execution_status(ur5_pose_0)
-          #time.sleep(1)
-          #ur5.gripper_motion(1)
-
-          ur5.go_to_pose_goal(ur5_pose_1)
-          ur5.trajectory_execution_status(ur5_pose_1)
-          time.sleep(1)
-          #ur5.gripper_motion(0)
-
-          ur5.go_to_pose_goal(ur5_pose_0)
-          ur5.trajectory_execution_status(ur5_pose_0)
-          time.sleep(1)
-
-          ur5.go_to_pose_goal(ur5_pose_2)
-          ur5.trajectory_execution_status(ur5_pose_2)
-          
-          ur5.go_to_joint_state()
-          time.sleep(4)
-
-          ur5.go_to_pose_goal(ur5_pose_5)
-          ur5.trajectory_execution_status(ur5_pose_5)
-          time.sleep(1)
-
-          ur5.go_to_pose_goal(ur5_pose_3)
-          ur5.trajectory_execution_status(ur5_pose_3)
-          time.sleep(1)
-          #ur5.gripper_motion(2)
-
-          ur5.go_to_pose_goal(ur5_pose_6)
-          ur5.trajectory_execution_status(ur5_pose_6)
-
-          ur5.go_to_pose_goal(ur5_pose_4)
-          ur5.trajectory_execution_status(ur5_pose_4)
-          time.sleep(1)
-          #ur5.gripper_motion(1)
-          ur5.go_to_pose_goal(ur5_pose_2)
-          ur5.trajectory_execution_status(ur5_pose_2)
-          #ur5.gripper_motion(2)
-          #ch = raw_input("Do you want to give more inputs (y/n): ")
-          if ch == 'n':
-              break'''
+    
+    
 
   except rospy.ROSInterruptException:
+
     return
   except KeyboardInterrupt:
+    cap.release()
+    cv2.destroyallwindows()   
+    
     return
 
 if __name__ == '__main__':
