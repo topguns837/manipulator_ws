@@ -8,9 +8,9 @@ import imutils
 import numpy as np
 
 
-#cap = cv2.VideoCapture(1)
+#cap = cv2.VideoCapture(0)
 class ImageProcessing:
-	def __init__(self,frame , lower=(29, 86, 6), upper=(64, 255, 255)):
+	def __init__(self, lower, upper):
 		
 	
 		self.lower = lower  # The lower limit of the colour range in the form of RGB Values
@@ -70,9 +70,9 @@ class ImageProcessing:
 		    	#self.velocity_msg.linear.y = 0
 
 		    #self.pub.publish(self.velocity_msg)
-			result = [self.frame , linear_x , linear_y]
+			result = [self.frame , linear_x , linear_y , mask]
 		except :
-			result = [self.frame , 0 , 0 ]
+			result = [self.frame , 0 , 0 , mask]
 		
 		return result
 
@@ -95,6 +95,7 @@ if __name__=="__main__":
 			
 			result=sc.publish(frame)
 			cv2.imshow("Frame" ,result[0])
+			cv2.imshow("Mask" , result[-1])
 			cv2.waitKey(1)
 
 			if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -113,4 +114,5 @@ if __name__=="__main__":
 	#print(result[0].shape)
 
 	#cv2.waitKey(0)
+
 
