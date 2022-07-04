@@ -15,15 +15,15 @@ from moveit_commander.conversions import pose_to_list
 import tf2_msgs.msg
 import tf
 import numpy as np
-from mask import ImageProcessing
+#from mask import ImageProcessing
 import cv2
 import imutils
 #goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
 
 pick_down = [-185 , 36 , 54, 172 , -91 , -181]
+WIDTH_THRESH = 120
 
-
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(-1)
 
 class ImageProcessing:
   def __init__(self, lower ,upper ):
@@ -43,11 +43,12 @@ class ImageProcessing:
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
-    result = [self.frame , None , None , mask]
+    result = [self.frame , None , None , mask, self.w]
 
     if len(cnts) > 0:
       c = max(cnts, key=cv2.contourArea)
       self.x, self.y , self.w , self.h = cv2.boundingRect(c)
+      #print("WIDTH : ",self.w)
       cv2.rectangle(frame , (self.x , self.y) , (self.x + self.w , self.y + self.h) , (36,255,12) , 2)
       
       xcenter = self.frame.shape[1]/2
@@ -74,7 +75,7 @@ class ImageProcessing:
         linear_y = -1
       else:
         linear_y = 0
-      result = [self.frame , linear_x , linear_y , mask]
+      result = [self.frame , linear_x , linear_y , mask, self.w]
       
     return result
 
@@ -235,17 +236,17 @@ class UR5:
         j1 -= 0.2
         self.count_x += 1
         self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
-        #time.sleep(0.5)
+        time.sleep(0.5)
 
       elif result[1] == -1 :
         dir = -1
         j1 += 0.2
         self.count_x += 1
         self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
-        #time.sleep(0.5)
+        time.sleep(0.5)
 
       elif result[1] == 0 :
-        print("count : ",self.count_x)
+        #print("count : ",self.count_x)
         
         j5 += self.count_x*(0.2)*dir
         self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
@@ -254,8 +255,7 @@ class UR5:
         return ( False , [j1,j2,j3,j4,j5,j6] )
 
       else:
-        pass
-      
+        pass     
       
       
     return( True , [j1,j2,j3,j4,j5,j6] )
@@ -265,28 +265,46 @@ class UR5:
 
     return False , [j1,j2,j3,j4,j5,j6]
 
+  def fix_error_orient(self, result, pose) :
+    [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
+    w = result[-1]
+    print("w : ",w)
+
+    if w > WIDTH_THRESH :
+      j6 += 0.7
+      self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+      print("Fixing orientation error")
+      time.sleep(0.5)      
+    
+    else:
+      print("Orientation error fixed")
+      return( False , [j1,j2,j3,j4,j5,j6] )      
+
+    return ( True , [j1,j2,j3,j4,j5,j6] )
+
   
   def fix_error(self,start_pose) :
-    #[j1,j2,j3,j4,j5,j6] = goalList[0],goalList[1],goalList[2],goalList[3],goalList[4],goalList[5]
-    #cap = cv2.VideoCapture(0)
-    
+        
     flag_x= True  
-    temp_x = 0
+    flag_orient = True
     flag_y = True
     ip = ImageProcessing((20, 100 , 100 ),( 30 , 255, 255))
     
     loop = 0
-    while (cap.isOpened() ) and ( flag_x or flag_y ):
+    while (cap.isOpened() ) and ( flag_x or flag_y or flag_orient):
       loop += 1
       ret , frame = cap.read()
       if ret :
         
         result=ip.publish(frame)
-        if flag_x ==  True :
-          flag_x, start_pose = self.fix_error_x(result, start_pose)         
+        if flag_orient ==  True :
+          flag_orient, start_pose = self.fix_error_orient(result, start_pose)         
           
 
-        if flag_x == False and flag_y == True :
+        if flag_orient == False and flag_x == True :
+          flag_x, start_pose = self.fix_error_x(result , start_pose)
+
+        if flag_orient == False and flag_x == False and flag_y ==  True :
           flag_y, start_pose = self.fix_error_y(result , start_pose)
           
 
@@ -322,8 +340,8 @@ def main():
     ur5.fix_error(goalList[0])
     print("Alligned")
     time.sleep(5)
-    ur5.go_to_joint_state(pick_down[0], pick_down[1] , pick_down[2] , pick_down[3] , pick_down[4] ,pick_down[5] + 5)
-    print("Pick Down")
+    #ur5.go_to_joint_state(pick_down[0], pick_down[1] , pick_down[2] , pick_down[3] , pick_down[4] ,pick_down[5] + 5)
+    #print("Pick Down")
     time.sleep(5)
     ur5.go_to_joint_state(j11,j12,j13,j14,j15,j16)
     time.sleep(5)

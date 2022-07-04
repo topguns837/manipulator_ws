@@ -39,6 +39,7 @@ class ImageProcessing:
 			if len(cnts) > 0:
 				c = max(cnts, key=cv2.contourArea)
 				self.x, self.y , self.w , self.h = cv2.boundingRect(c)
+				print("WIDTH : ",self.w)
 				cv2.rectangle(frame , (self.x , self.y) , (self.x + self.w , self.y + self.h) , (36,255,12) , 2)
 			xcenter = self.frame.shape[1]/2
 			ycenter = self.frame.shape[0]/2
