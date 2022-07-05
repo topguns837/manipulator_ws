@@ -164,7 +164,7 @@ def main():
       ur5.go_to_joint_state(x,y,z,rx,ry,rz)
       time.sleep(2)
 
-    cap=cv2.VideoCapture(0)
+    cap=cv2.VideoCapture(1)
     
     X=[210,170,137,119,103,92,86,76,71,66,60]
     Y=[20,25,30,35,40,45,50,55,60,65,70]
@@ -245,8 +245,10 @@ def main():
 
 
     # goalList2=[[j1,-29,108,99,j5,-181],[j1,-6,95,90,j5,-181],[j1,17,60,102,j5,-181],[j1,-4,83,102,j5,-181],[j1,7,89,82,j5,-181],[j1,17,74,88,j5,-181]]
+
     # goalList2=[[j1,2,76,103,j5,-181],[j1,6,89,83,j1,-181],[j1,19,75,84,j5,-181],[j1,-7,101,84,j5,-181],[j1,-6,95,90,j5,-181]]
     goalList2=[[j1,2,76,103,j5,-181],[-73,-8,106,79,-73,-181],[-77,14,76,92,-78,-181],[j1,2,76,103,j5,-181]]
+
     ur5=UR5()
     for id,pt in enumerate(goalList2):
       x0 = pt[0]
@@ -256,7 +258,7 @@ def main():
       ry0 = pt[4]
       rz0 = pt[5]
       ur5.go_to_joint_state(x0,y0,z0,rx0,ry0,rz0)
-      time.sleep(5)
+      time.sleep(2)
     
 
   except rospy.ROSInterruptException:
