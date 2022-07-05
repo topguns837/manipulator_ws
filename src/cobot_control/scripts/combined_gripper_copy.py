@@ -90,18 +90,10 @@ class UR5:
     move_group.clear_pose_targets()
 
   def go_to_joint_state(self,x,y,z,rx,ry,rz):
-    # Copy class variables to local variables to make the web tutorials more clear.
-    # In practice, you should use the class variables directly unless you have a good
-    # reason not to.
+  
     move_group = self.move_group
 
-    ## BEGIN_SUB_TUTORIAL plan_to_joint_state
-    ##
-    ## Planning to a Joint Goal
-    ## ^^^^^^^^^^^^^^^^^^^^^^^^
-    ## The Panda's zero configuration is at a `singularity <https://www.quora.com/Robotics-What-is-meant-by-kinematic-singularity>`_ so the first
-    ## thing we want to do is move it to a slightly better configuration.
-    # We can get the joint values from the group and adjust some of the values:
+    
     joint_goal = move_group.get_current_joint_values()
     joint_goal[0]=round(math.radians(x),2)
     joint_goal[1]=round(math.radians(y),2)
@@ -118,14 +110,6 @@ class UR5:
     # joint_goal[5]=rz
     
 
-    # if(joint_goal[0]<0):
-    #   joint_goal[0] = joint_goal[0] + pi
-    # else:
-    #   joint_goal[0] = joint_goal[0] - pi
-
-    # The go command can be called with joint values, poses, or without any
-    # parameters if you have already set the pose or joint target for the group
-    
     move_group.go(joint_goal, wait=True)
 
     # Calling ``stop()`` ensures that there is no residual movement
@@ -255,12 +239,16 @@ def main():
             
       cv2.imshow('image',img)
       cv2.waitKey(1)
-      
-    # time.sleep(2)
+    cap.release()
+    # cv2.destroyallwindows()   
+    time.sleep(7)
 
 
     # goalList2=[[j1,-29,108,99,j5,-181],[j1,-6,95,90,j5,-181],[j1,17,60,102,j5,-181],[j1,-4,83,102,j5,-181],[j1,7,89,82,j5,-181],[j1,17,74,88,j5,-181]]
-    goalList2=[[j1,-6,95,90,j5,-181],[j1,6,89,83,j1,-181],[j1,19,75,84,j5,-181],[j1,-7,101,84,j5,-181]]
+
+    # goalList2=[[j1,2,76,103,j5,-181],[j1,6,89,83,j1,-181],[j1,19,75,84,j5,-181],[j1,-7,101,84,j5,-181],[j1,-6,95,90,j5,-181]]
+    goalList2=[[j1,2,76,103,j5,-181],[-73,-8,106,79,-73,-181],[-77,14,76,92,-78,-181],[j1,2,76,103,j5,-181]]
+
     ur5=UR5()
     for id,pt in enumerate(goalList2):
       x0 = pt[0]

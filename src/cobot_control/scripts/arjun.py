@@ -120,6 +120,9 @@ class UR5:
 
   def __init__(self):
 
+    self.rotate_iters = 0
+
+    self.pick_down = [-185 , 36 , 54, 172 , -91 , -181]
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node('move_group_python_interface_tutorial', anonymous=True)
 
@@ -251,6 +254,8 @@ class UR5:
         j5 += self.count_x*(0.2)*dir
         self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
 
+        self.pick_down = [j1,j2,j3,j4,j5,j6]
+
         print("X error fixed")
         return ( False , [j1,j2,j3,j4,j5,j6] )
 
@@ -263,6 +268,9 @@ class UR5:
   def fix_error_y(self , result ,  pose):
     [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
 
+    self.pick_down = [j1,j2,j3,j4,j5,j6]
+    print("fix_error_y : ",self.pick_down)
+
     return False , [j1,j2,j3,j4,j5,j6]
 
   def fix_error_orient(self, result, pose) :
@@ -272,12 +280,18 @@ class UR5:
 
     if w > WIDTH_THRESH :
       j6 += 0.7
+
+      self.rotate_iters += 1
+
       self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
       print("Fixing orientation error")
       time.sleep(0.5)      
     
     else:
       print("Orientation error fixed")
+
+      self.pick_down = [j1,j2,j3,j4,j5,j6]
+
       return( False , [j1,j2,j3,j4,j5,j6] )      
 
     return ( True , [j1,j2,j3,j4,j5,j6] )
@@ -313,8 +327,10 @@ class UR5:
         
         cv2.waitKey(1)
       
-    pick_down = start_pose
-    print("pick_down : ",pick_down)
+
+    #pick_down = start_pose
+    #print("pick_down : ",pick_down)
+
     
 
     cap.release()
@@ -340,9 +356,16 @@ def main():
     ur5.fix_error(goalList[0])
     print("Alligned")
     time.sleep(5)
-    #ur5.go_to_joint_state(pick_down[0], pick_down[1] , pick_down[2] , pick_down[3] , pick_down[4] ,pick_down[5] + 5)
-    #print("Pick Down")
+
+
+    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.1 , ur5.pick_down[1], ur5.pick_down[2], ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
+
+    print("Pick Down : ",ur5.pick_down)
     time.sleep(5)
+    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.1 , ur5.pick_down[1] + 23 , ur5.pick_down[2] - 23, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
+    print("Pick Down")
+    time.sleep(5)
+
     ur5.go_to_joint_state(j11,j12,j13,j14,j15,j16)
     time.sleep(5)
     print("Drop Up")
