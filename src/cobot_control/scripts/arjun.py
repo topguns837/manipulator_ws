@@ -352,7 +352,7 @@ def main():
     print("Pick Down : ",ur5.pick_down)
     time.sleep(5)
 
-    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.1 , ur5.pick_down[1] + 23 , ur5.pick_down[2] - 23, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
+    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.1 , ur5.pick_down[1] + 21 , ur5.pick_down[2] - 21, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
     print("Pick Down")
     time.sleep(5)
 

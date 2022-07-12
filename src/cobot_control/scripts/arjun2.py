@@ -350,7 +350,7 @@ class UR5:
         
     flag_x= True  
     flag_orient = True
-    flag_y = True
+    flag_y = False
     ip = ImageProcessing((20, 100 , 100 ),( 30 , 255, 255))
     
     loop = 0
@@ -388,11 +388,12 @@ class UR5:
 def main():
 
   try:
-    goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
+    goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181], [-144, 49, 53.8, 168.8, -89, 181]]
     [j01,j02,j03,j04,j05,j06] = goalList[0][0],goalList[0][1],goalList[0][2],goalList[0][3],goalList[0][4],goalList[0][5]
     [j11,j12,j13,j14,j15,j16] = goalList[1][0],goalList[1][1],goalList[1][2],goalList[1][3],goalList[1][4],goalList[1][5]
     
     [j31,j32,j33,j34,j35,j36] = goalList[2][0],goalList[2][1],goalList[2][2],goalList[2][3],goalList[2][4],goalList[2][5]
+    [j41,j42,j43,j44,j45,j46] = goalList[3][0],goalList[3][1],goalList[3][2],goalList[3][3],goalList[3][4],goalList[3][5]
 
     ur5=UR5()
     
@@ -410,13 +411,17 @@ def main():
     
     time.sleep(5)
 
-    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.04*ur5.rotate_dir , ur5.pick_down[1] + 15 - BASE_ADJ, ur5.pick_down[2] - 15 + BASE_ADJ, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
+    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.04*ur5.rotate_dir , ur5.pick_down[1] + 23 - BASE_ADJ, ur5.pick_down[2] - 23 + BASE_ADJ, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
     #print("Pick Down")
     
     time.sleep(5)
 
     ur5.go_to_joint_state(j11,j12,j13,j14,j15,j16)
     #print("Drop Up")
+    time.sleep(5)
+
+    ur5.go_to_joint_state(j41,j42,j43,j44,j45,j46)
+    #print("Drop Down")
     time.sleep(5)
     
     #ur5.go_to_joint_state(j31,j32,j33,j34,j35,j36)
