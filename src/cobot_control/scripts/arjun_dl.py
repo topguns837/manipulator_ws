@@ -192,7 +192,7 @@ class WorkpieceDetector :
 
             xcenter = resized.shape[1]/2
             ycenter = resized.shape[0]/2
-            
+
             obj_xcenter = self.x + self.w/2
             obj_ycenter = self.y + self.h/2
 
@@ -504,15 +504,20 @@ class UR5:
 
             if ret :
                 result=wd.control_loop(frame)
-                if flag_orient ==  True :
-                    flag_orient, start_pose = self.fix_error_orient(result, start_pose)        
+
+                if result[-1]==result[-2]==None :
+                    pass
+                else:
+
+                    if flag_orient ==  True :
+                        flag_orient, start_pose = self.fix_error_orient(result, start_pose)        
 
 
-                if flag_orient == False and flag_x == True :
-                    flag_x, start_pose = self.fix_error_x(result , start_pose)
+                    if flag_orient == False and flag_x == True :
+                        flag_x, start_pose = self.fix_error_x(result , start_pose)
 
-                if flag_orient == False and flag_x == False and flag_y ==  True :
-                    flag_y, start_pose = self.fix_error_y(result , start_pose)
+                    if flag_orient == False and flag_x == False and flag_y ==  True :
+                        flag_y, start_pose = self.fix_error_y(result , start_pose)
 
 
               #cv2.imshow("mask" , result[-1])
