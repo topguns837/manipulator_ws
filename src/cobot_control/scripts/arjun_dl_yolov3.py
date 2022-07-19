@@ -17,8 +17,8 @@ import tf
 import numpy as np
 #from mask import ImageProcessing
 import cv2
-import imutils
-from darknet_ros_msgs.msg import *
+#import imutils
+#from darknet_ros_msgs.msg import *
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -288,8 +288,8 @@ class DNN :
 
 
     def predict( self, frame ) :
-        LABELS = open(LABELS_FILE).read().strip().split("\n")
-
+        #LABELS = open(LABELS_FILE).read().strip().split("\n")
+        LABELS = ["yellow", "cube", "arc"]
         np.random.seed(4)
         COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),
         	dtype="uint8")
@@ -445,6 +445,12 @@ class UR5:
     def __init__(self):
 
         self.rotate_iters = 0
+        self.rotate_dir = 1
+        self.init_width = 0
+
+        self.dir_x,self.dir_y = 0,0
+
+        #self.pick_down = [-185 , 36 , 54, 172 , -91 , -181]
 
         self.pick_down = [-185 , 36 , 54, 172 , -91 , -181]
         moveit_commander.roscpp_initialize(sys.argv)
@@ -660,7 +666,7 @@ class UR5:
 
 
             #print("Fixing orientation error")
-            time.sleep(0.5)      
+            #time.sleep(0.5)      
 
             else:
                 #print("Orientation error fixed")
