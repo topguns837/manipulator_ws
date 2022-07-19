@@ -269,6 +269,8 @@ class UR5:
     return( True , [j1,j2,j3,j4,j5,j6] )
     
   def fix_error_y(self , result ,  pose):
+
+    global BASE_ADJ
     [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
 
     
@@ -278,25 +280,25 @@ class UR5:
     else:
       if result[2] == 1:
         self.dir_y= +1
-        j2 += 0.2
+        j3 += 0.2
         self.count_y += 1
         self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
         time.sleep(0.5)
 
       elif result[2] == -1 :
         self.dir_y = -1
-        j2 -= 0.2
+        j3 -= 0.2
         self.count_y += 1
         self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
         time.sleep(0.5)
 
       elif result[2] == 0 :
         
-        BASE_ADJ =  self.count_y*(0.2)*self.dir_y
-        print(BASE_ADJ)
-        j3 += self.count_y*(0.2)*(-self.dir_y)
+        BASE_ADJ =  2*self.count_y*(0.2)*self.dir_y
+        #print(BASE_ADJ)
+        j2 += self.count_y*(0.2)*(self.dir_y)
         #BASE_ADJ = self.count_y*(0.2)*dir*(-1)
-        #self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+        self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
         self.pick_down = [j1,j2,j3,j4,j5,j6]
         time.sleep(0.5)
         print("Y error fixed")
@@ -321,7 +323,7 @@ class UR5:
 
     if w > WIDTH_THRESH :
       #print("rotate_iter : ",self.rotate_iters)
-      j6 += 0.7*self.rotate_dir
+      j6 += 1.5*self.rotate_dir
       self.rotate_iters += 1
       self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
 
@@ -350,7 +352,7 @@ class UR5:
         
     flag_x= True  
     flag_orient = True
-    flag_y = False
+    flag_y =  True
     ip = ImageProcessing((20, 100 , 100 ),( 30 , 255, 255))
     
     loop = 0
@@ -388,7 +390,7 @@ class UR5:
 def main():
 
   try:
-    goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181], [-144, 49, 53.8, 168.8, -89, 181]]
+    goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181], [-145, 49, 54, 168.8, -89, 181]]
     [j01,j02,j03,j04,j05,j06] = goalList[0][0],goalList[0][1],goalList[0][2],goalList[0][3],goalList[0][4],goalList[0][5]
     [j11,j12,j13,j14,j15,j16] = goalList[1][0],goalList[1][1],goalList[1][2],goalList[1][3],goalList[1][4],goalList[1][5]
     
@@ -411,7 +413,7 @@ def main():
     
     time.sleep(5)
 
-    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.04*ur5.rotate_dir , ur5.pick_down[1] + 23 - BASE_ADJ, ur5.pick_down[2] - 23 + BASE_ADJ, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
+    ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_iters*0.04*ur5.rotate_dir , ur5.pick_down[1] + 23 - BASE_ADJ, ur5.pick_down[2] - 23 + BASE_ADJ , ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
     #print("Pick Down")
     
     time.sleep(5)
