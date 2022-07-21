@@ -25,10 +25,10 @@ from cv_bridge import CvBridge, CvBridgeError
 #goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
 
 pick_down = [-185 , 36 , 54, 172 , -91 , -181]
-WIDTH_THRESH = 120
+WIDTH_THRESH = 200
 
-INPUT_WIDTH = 640
-INPUT_HEIGHT = 640
+INPUT_WIDTH = 416
+INPUT_HEIGHT = 416
 SCORE_THRESHOLD = 0.2
 NMS_THRESHOLD = 0.4
 CONFIDENCE_THRESHOLD = 0.4
@@ -44,7 +44,7 @@ INPUT_FILE='14.jpg'
 OUTPUT_FILE='predicted.jpg'
 LABELS_FILE='classes.names'
 CONFIG_FILE='yolov3-custom.cfg'
-WEIGHTS_FILE='yolov3-custom_last.weights'
+WEIGHTS_FILE='yolov3-custom_6000_300.weights'
 CONFIDENCE_THRESHOLD=0.3
 
 #is_cuda = len(sys.argv) > 1 and sys.argv[1] == "cuda"
@@ -204,10 +204,10 @@ class WorkpieceDetector :
 
             linear_x , linear_y , linear_z = [0]*3 
 
-            if xcenter > obj_xcenter + self.w/2 :
+            if xcenter > obj_xcenter + self.w/4 :
                 linear_x = -1
                 #self.velocity_msg.linear.x = -1
-            elif xcenter < obj_xcenter - self.w/2 :
+            elif xcenter < obj_xcenter - self.w/4 :
                 linear_x = 1
                 #self.velocity_msg.linear.x = 1
             else:
@@ -228,6 +228,18 @@ class WorkpieceDetector :
             result = [ resized , linear_x , linear_y, self.w ]
             return result
 
+def dec_brightness(img, value = 0) :
+    hsv = cv2.cvtColor( img, cv2.COLOR_BGR2HSV )
+    h, s, v = cv2.split(hsv)
+
+    lim = value
+    v[v<lim] = 0
+    v[v>= lim] -= value
+
+    final_hsv = cv2.merge((h,s,v))
+    img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+    return img
+
 class DNN :
     def __init__(self) :
         self.H, self.W = 0, 0
@@ -235,15 +247,18 @@ class DNN :
         self.output = []
 
     def give_output( self , frame, choice = 0) :
+        
 
         self.predict( frame )
-        print("self.result : ",self.result)
+        #print(self.result)
+        #print("self.result : ",self.result)
 
         frame = self.result[-1]
 
         #print("Frame : ", frame )
 
         xcenter, ycenter = frame.shape[1]/2, frame.shape[0]/2
+        #print("xcenter ", xcenter )
 
         cv2.line( frame , (int(xcenter) , 0) , (int(xcenter) , int(2*ycenter)) , (255,0,0) , 5)
         cv2.line( frame , (0 , int(ycenter)) , (int(xcenter*2) , int(ycenter)) , (255,0,0) , 5)
@@ -251,39 +266,34 @@ class DNN :
 
         try :
 
-            self.x, self.y = self.result[choice][0], self.result[choice][1]
-            self.w , self.h =  self.result[choice][2], self.result[choice][3]
-
-            
+            self.x, self.y = self.result[0][0], self.result[choice][0]
+            self.w , self.h =  self.result[0][2], self.result[0][3]
+            #print("self.w", self.w)
 
             obj_xcenter, obj_ycenter = self.x + self.w/2, self.y + self.h/2        
-
             linear_x , linear_y , linear_z = [0]*3 
-
-            if xcenter > obj_xcenter + self.w/2 :
+            if xcenter > obj_xcenter + self.w/4 :
                 linear_x = -1
-
-            elif xcenter < obj_xcenter - self.w/2 :
+            elif xcenter < obj_xcenter - self.w/4 :
                 linear_x = 1
-
             else:
                 linear_x = 0
-
             if ycenter > obj_ycenter + self.h/2 :
                 linear_y = 1
-                
+
             elif ycenter < obj_ycenter - self.h/2 :
                 linear_y = -1
-                
+
             else:
                 linear_y = 0
-                
+
             self.output = [ frame , linear_x , linear_y, self.w ]
             return self.output
 
-        except :
-            print("Object with ID {} not found".format(choice))
-            return [ frame, 0, 0, 0 ]
+        except Exception:
+            #print(Exception)
+            #print("Object with ID {} not found".format(choice))
+            return [ frame, None, None, None]
 
 
 
@@ -365,7 +375,7 @@ class DNN :
         idxs = cv2.dnn.NMSBoxes(boxes, confidences, CONFIDENCE_THRESHOLD,
         	CONFIDENCE_THRESHOLD)
 
-        print("len(idxs) : ", len(idxs))
+        #print("len(idxs) : ", len(idxs))
 
         
         result = []
@@ -380,6 +390,7 @@ class DNN :
                 coords = [x, y, w, h, i]
 
                 result.append( coords )
+                #print("appended")
 
                 color = [int(c) for c in COLORS[classIDs[i]]]
 
@@ -389,8 +400,10 @@ class DNN :
                 cv2.putText(image, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX,
                 1, color, 2)
                 
+        #if result[:-1]!=[] :
         result.append( image )
         self.result = result
+        #print("result : ",self.result)
         #print("Result : ", self.result)
         return self.result
 
@@ -555,7 +568,7 @@ class UR5:
     def fix_error_x(self , result ,  pose):
          
 
-        print("result[1] : ",result[1])
+        #print("result[1] : ",result[1])
         [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
 
         frame = result[0]
@@ -564,8 +577,6 @@ class UR5:
         if result[1] ==  None :
             pass
         else:
-
-
             if result[1] == 1:
 
               
@@ -643,19 +654,21 @@ class UR5:
     def fix_error_orient(self, result, pose) :
         [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
         w = result[-1]
+        
 
         if self.rotate_iters == 0:
             self.init_width = w
-        #print("w : ",w)
+            #print("init_width : ", self.init_width)
+        print("w : ",w)
 
         if w > WIDTH_THRESH :
 
-          #print("rotate_iter : ",self.rotate_iters)
-            j6 += 0.7*self.rotate_dir
+            #print("rotate_iter : ",self.rotate_iters)
+            j6 += 1.5*self.rotate_dir
             self.rotate_iters += 1
             self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
 
-            if self.rotate_dir == 1 and self.rotate_iters > 5 and w > self.init_width :
+            if self.rotate_dir == 1 and self.rotate_iters == 15 and w > self.init_width :
 
               self.rotate_dir = -1
               self.rotate_iters = 0
@@ -668,11 +681,11 @@ class UR5:
             #print("Fixing orientation error")
             #time.sleep(0.5)      
 
-            else:
-                #print("Orientation error fixed")
-                self.pick_down = [j1,j2,j3,j4,j5,j6]
-                return( False , [j1,j2,j3,j4,j5,j6] )
-            return ( True , [j1,j2,j3,j4,j5,j6] )
+        else:
+            print("Orientation error fixed")
+            self.pick_down = [j1,j2,j3,j4,j5,j6]
+            return( False , [j1,j2,j3,j4,j5,j6] )
+        return ( True , [j1,j2,j3,j4,j5,j6] )
         
     def fix_error(self,start_pose) :
         
@@ -686,11 +699,13 @@ class UR5:
 
             loop += 1
             ret , frame = cap.read()
+            frame = dec_brightness(frame)
 
             if ret :
                 result=dnn.give_output(frame)
+                print("linear_x : ",result[1], "linear_y : ", result[2])
 
-                if result[-1]==result[-2]==None :
+                if result[-1]==result[-2]==result[-3]==None :
                     pass
                 else:
 

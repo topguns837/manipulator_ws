@@ -2,7 +2,7 @@
 
 import sys
 import time
-import roslib
+#import roslib
 from math import pi
 import math
 import copy
@@ -17,7 +17,7 @@ import tf
 import numpy as np
 #from mask import ImageProcessing
 import cv2
-import imutils
+#import imutils
 #goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
 
 pick_down = [-185 , 36 , 54, 172 , -91 , -181]
@@ -29,6 +29,9 @@ SCORE_THRESHOLD = 0.2
 NMS_THRESHOLD = 0.4
 CONFIDENCE_THRESHOLD = 0.4
 
+CONFIG_FILE='yolov3-custom.cfg'
+WEIGHTS_FILE='yolov3-custom_last.weights'
+
 colors = [(255, 255, 0), (0, 255, 0), (0, 255, 255), (255, 0, 0)]
 
 is_cuda = len(sys.argv) > 1 and sys.argv[1] == "cuda"
@@ -36,11 +39,11 @@ is_cuda = len(sys.argv) > 1 and sys.argv[1] == "cuda"
 #net = build_model(is_cuda)
 #capture = load_capture()
 
-start = time.time_ns()
+'''start = time.time_ns()
 frame_count = 0
 total_frames = 0
 fps = -1
-
+'''
 
 cap = cv2.VideoCapture(-1)
 
@@ -49,11 +52,11 @@ class WorkpieceDetector :
         self.frame_count = 0
         self.total_frames = 0
         self.fps = -1
-        self.start = time.time_ns()
+        #self.start = time.time_ns()
         self.class_list = [ "Yellow", "Cube", "Arc" ]
 
     def build_model(self , is_cuda):
-        self.net = cv2.dnn.readNet("best_epoch_50.onnx")
+        self.net = cv2.dnn.readNetFromDarknet(CONFIG_FILE, WEIGHTS_FILE )
         if is_cuda:
             print("Attempty to use CUDA")
             self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
@@ -472,22 +475,22 @@ class UR5:
 
             if self.rotate_dir == 1 and self.rotate_iters > 5 and w > self.init_width :
 
-              self.rotate_dir = -1
-              self.rotate_iters = 0
-              self.go_to_joint_state(-185 , 36 , 54, 172 , -91 , -181)
+                self.rotate_dir = -1
+                self.rotate_iters = 0
+                self.go_to_joint_state(-185 , 36 , 54, 172 , -91 , -181)
 
-              print("DIR CHANGE")
-              time.sleep(0.5)
+                print("DIR CHANGE")
+                time.sleep(0.5)
 
 
             #print("Fixing orientation error")
-            time.sleep(0.5)      
+                time.sleep(0.5)      
 
-            else:
-                #print("Orientation error fixed")
-                self.pick_down = [j1,j2,j3,j4,j5,j6]
-                return( False , [j1,j2,j3,j4,j5,j6] )
-            return ( True , [j1,j2,j3,j4,j5,j6] )
+        else:
+            #print("Orientation error fixed")
+            self.pick_down = [j1,j2,j3,j4,j5,j6]
+            return( False , [j1,j2,j3,j4,j5,j6] )
+        return ( True , [j1,j2,j3,j4,j5,j6] )
         
     def fix_error(self,start_pose) :
         

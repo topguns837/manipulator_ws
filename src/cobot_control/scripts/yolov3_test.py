@@ -8,7 +8,8 @@ INPUT_FILE='14.jpg'
 OUTPUT_FILE='predicted.jpg'
 LABELS_FILE='classes.names'
 CONFIG_FILE='yolov3-custom.cfg'
-WEIGHTS_FILE='yolov3-custom_last.weights'
+WEIGHTS_FILE1='yolov3-custom_last.weights'
+WEIGHTS_FILE2='yolov3-custom_6000_300.weights'
 CONFIDENCE_THRESHOLD=0.3
 
 #is_cuda = len(sys.argv) > 1 and sys.argv[1] == "cuda"
@@ -24,7 +25,7 @@ class DNN :
     def give_output( self , frame, choice = 0) :
 
         self.predict( frame )
-        print("self.result : ",self.result)
+        #print("self.result : ",self.result)
 
         frame = self.result[-1]
 
@@ -69,20 +70,21 @@ class DNN :
             return self.output
 
         except :
-            print("Object with ID {} not found".format(choice))
+            #print("Object with ID {} not found".format(choice))
             return [ frame, 0, 0, 0 ]
 
 
 
     def predict( self, frame ) :
         LABELS = open(LABELS_FILE).read().strip().split("\n")
+        LABELS = ["yellow","cube","arc"]
 
         np.random.seed(4)
         COLORS = np.random.randint(0, 255, size=(len(LABELS), 3),
         	dtype="uint8")
 
 
-        net = cv2.dnn.readNetFromDarknet(CONFIG_FILE, WEIGHTS_FILE)
+        net = cv2.dnn.readNetFromDarknet(CONFIG_FILE, WEIGHTS_FILE2)
         '''if is_cuda:
             print("Attempty to use CUDA")
             net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
@@ -105,6 +107,8 @@ class DNN :
         start = time.time()
         layerOutputs = net.forward(ln)
         end = time.time()
+
+        print(layerOutputs)
 
 
         #print("[INFO] YOLO took {:.6f} seconds".format(end - start))
@@ -193,7 +197,7 @@ if __name__ == "__main__" :
 
         if ret :
             result = dnn.give_output( frame )
-            print( result[1],result[2] )
+            #print( result[1],result[2] )
 
             cv2.imshow( "Image", result[0]) 
             if cv2.waitKey(1) & 0xFF == ord('q') :
