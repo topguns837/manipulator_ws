@@ -26,10 +26,10 @@ import random
 
 #goalList=[[-185 , 36 , 54, 172 , -91 , -181],[-145 , 42 , 54 , 172 , -90 , -181],[-145,48, 54 ,167 ,-90 ,-181]]
 
-LABELS = ["Yellow", "Cube", "Arc","Unknown"]
+LABELS = ["Yellow", "Cube", "Arc"]
 
 pick_down = [-185 , 36 , 54, 172 , -91 , -181]
-WIDTH_THRESH = [140, 200,450 ]
+WIDTH_THRESH = [140, 200,220 ]
 
 INPUT_WIDTH = 416
 INPUT_HEIGHT = 416
