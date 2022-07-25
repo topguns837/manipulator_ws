@@ -275,7 +275,7 @@ class DNN :
             if coords[4]==choice :
                 obj_coords = coords
         
-        print("obj_coords",obj_coords)
+        #print("obj_coords",obj_coords)
         try :
 
             self.x, self.y = obj_coords[0], obj_coords[1]
@@ -478,6 +478,7 @@ class UR5:
         self.rotate_iters = 0
         self.rotate_dir = 1
         self.init_width = 0
+        self.orient_start_iters = 0
 
         self.dir_x,self.dir_y = 0,0
 
@@ -684,11 +685,64 @@ class UR5:
         #print("fix_error_y : ",self.pick_down)
         return True , [j1,j2,j3,j4,j5,j6]
 
+    def fix_orient_start( self, result, pose, choice) :
+        
+
+        [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
+        w = result[-1]
+        self.orient_start_fix = (0.25)*(w-WIDTH_THRESH[choice])
+
+        if self.orient_start_iters == 0:
+            self.init_width = w
+            print("init_width : ", self.init_width)
+            if w > WIDTH_THRESH[choice] :  
+                print("start_orient")    
+                j6 += self.orient_start_fix
+                self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+                self.orient_start_iters += 1
+                time.sleep(10)
+                return ( True , [j1,j2,j3,j4,j5,j6] )
+                
+
+            else :
+                return( False , [j1,j2,j3,j4,j5,j6] )
+
+        elif self.orient_start_iters == 1 :
+            if w +10 > self.init_width :
+                print("init_width : ", self.init_width)
+                print("current width : ", w)
+                self.orient_start_iters += 1
+                return ( True , [j1,j2,j3,j4,j5,j6] )
+            else:
+                self.rotate_iters = int(self.orient_start_fix/1.5)
+                self.rotate_dir = 1
+                return( False , [j1,j2,j3,j4,j5,j6] )
+                
+        
+        elif self.orient_start_iters == 2 :
+            print("reversing")
+            
+            j6 -= 2*self.orient_start_fix
+            self.go_to_joint_state(j1,j2,j3,j4,j5,j6 )
+            self.rotate_iters = int(self.orient_start_fix/1.5)
+            self.rotate_dir = -1
+            return( False , [j1,j2,j3,j4,j5,j6] )
+
+
+        else:
+            return ( True , [j1,j2,j3,j4,j5,j6] )  
+
+        return ( True , [j1,j2,j3,j4,j5,j6] )     
+                
+                
+        
+
+
     def fix_error_orient(self, result, pose, choice) :
         [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
         w = result[-1]
         
-
+        
         if self.rotate_iters == 0:
             self.init_width = w
             #print("init_width : ", self.init_width)
@@ -701,7 +755,7 @@ class UR5:
             self.rotate_iters += 1
             self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
 
-            if self.rotate_dir == 1 and self.rotate_iters >= 15 and w > self.init_width :
+            '''if self.rotate_dir == 1 and self.rotate_iters >= 15 and w > self.init_width :
 
               self.rotate_dir = -1
               self.rotate_iters = 0
@@ -709,11 +763,7 @@ class UR5:
               j1,j2,j3,j4,j5,j6 = -185 , 36 , 54, 172 , -91 , -181
 
               print("DIR CHANGE")
-              time.sleep(0.5)
-
-
-            #print("Fixing orientation error")
-            #time.sleep(0.5)      
+              time.sleep(0.5)'''
 
         else:
             print("Orientation error fixed")
@@ -726,6 +776,7 @@ class UR5:
         
         flag_x= True  
         flag_orient = True
+        flag_orient_start = True
         flag_y = False
         flag_pos_x = True
         dnn = DNN()
@@ -759,16 +810,18 @@ class UR5:
                     if flag_pos_x == True :
                         flag_pos_x, start_pose = self.fix_pos_x( result, start_pose, choice, frame )
                         
+                    if flag_orient_start == True and flag_pos_x == False :
+                        #print(result, start_pose, choice)
+                        flag_orient_start, start_pose = self.fix_orient_start( result, start_pose, choice )
 
-
-                    if flag_orient ==  True and flag_pos_x ==  False :
+                    if flag_orient ==  True and flag_pos_x ==  False and flag_orient_start == False:
                         flag_orient, start_pose = self.fix_error_orient(result, start_pose, choice)        
 
 
-                    if flag_orient == False and flag_pos_x == False and flag_x == True :
+                    if flag_orient == False and flag_orient_start == False and flag_pos_x == False and flag_x == True :
                         flag_x, start_pose = self.fix_error_x(result , start_pose)
 
-                    if flag_orient == False and flag_x == False and flag_pos_x == False and flag_y ==  True :
+                    if flag_orient == False and flag_orient_start == False and flag_x == False and flag_pos_x == False and flag_y ==  True :
                         flag_y, start_pose = self.fix_error_y(result , start_pose)
 
 
