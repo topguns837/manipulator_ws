@@ -69,7 +69,7 @@ def dec_brightness(img, value = 0) :
     final_hsv = cv2.merge((h,s,v))
     img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
     return img
-
+'''
 class DNN :
     def __init__(self) :
         self.H, self.W = 0, 0
@@ -144,10 +144,10 @@ class DNN :
 
 
         net = cv2.dnn.readNetFromDarknet(CONFIG_FILE, WEIGHTS_FILE)
-        '''if is_cuda:
+        if is_cuda:
             print("Attempty to use CUDA")
             net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-            net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)'''
+            net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
 
         #image = cv2.imread(INPUT_FILE)
         image = cv2.resize( frame, ( 640,640 ))
@@ -246,6 +246,7 @@ class DNN :
         #print("result : ",self.result)
         #print("Result : ", self.result)
         return self.result
+        '''
 
 
 def takefourth(l) :
@@ -303,7 +304,7 @@ class UR5:
         
         #self.bridge = CvBridge()
         #self.pub = rospy.Publisher("yolo_image", Image, queue_size = 10)
-        self.sub = rospy.Subscriber("/bounding_box", boundingboxes, self.callback)
+        self.sub = rospy.Subscriber("/bounding_box", boundingboxes, self.bb_callback)
         self.rotate_iters = 0
         self.rotate_dir = 1
         self.init_width = 0
@@ -331,11 +332,11 @@ class UR5:
 
         self.move_group = move_group
 
-    def callback(self, bb) :
+    def bb_callback(self, bb) :
+        #print("callback")
         self.bb = bb
 
-    def give_coords(self, choice) :
-        obj_coords = []
+    def give_coords(self, choice) :       
 
 
         if choice == 0 :
@@ -358,6 +359,8 @@ class UR5:
 
         else:
             pass
+        self.obj_coords = obj_coords
+        #print("obj_coords : ", obj_coords)
 
 
 
@@ -480,11 +483,13 @@ class UR5:
 
         [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
         #dnn_pos_x = DNN()
-        coords = self.give_coords(choice)
+        #coords = self.give_coords(choice)
         #coords = result[choice]
-        pos_x_error = coords[0] - 320
+        print("pos_x_coords : ", self.obj_coords)
+        pos_x_error = (self.obj_coords[0] + self.obj_coords[2]/2) - 320
 
-        j1 -= (0.03)*pos_x_error
+        j1 -= (0.028)*pos_x_error
+        j6 -= (0.028)*pos_x_error
         #j5 -= pos_x_error
 
         self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
@@ -497,40 +502,34 @@ class UR5:
         
         [j1,j2,j3,j4,j5,j6] = pose[0],pose[1],pose[2],pose[3],pose[4],pose[5]
 
-        frame = result[0]
+        #frame = result[0]
 
         self.orient_dir = 0
-        if result[1] ==  None :
+        '''if result[1] ==  None :
             pass
+        else:'''
+        if result[1] == 1:
+          
+            self.orient_dir = +1
+            j1 -= 0.2
+            self.count_x += 1
+            self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+            time.sleep(0.5)
+        elif result[1] == -1 :
+            self.orient_dir = -1
+            j1 += 0.2
+            self.count_x += 1
+            self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+            time.sleep(0.5)
+        elif result[1] == 0 :                
+            #j5 += self.count_x*(0.2)*self.orient_dir
+            self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
+            time.sleep(0.5)
+            self.pick_down = [j1,j2,j3,j4,j5,j6]
+            print("X error fixed")
+            return ( False , [j1,j2,j3,j4,j5,j6] )
         else:
-            if result[1] == 1:
-
-              
-                self.orient_dir = +1
-                j1 -= 0.2
-                self.count_x += 1
-                self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
-                time.sleep(0.5)
-
-            elif result[1] == -1 :
-
-                self.orient_dir = -1
-                j1 += 0.2
-                self.count_x += 1
-                self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
-                time.sleep(0.5)
-
-            elif result[1] == 0 :                
-
-                j5 += self.count_x*(0.2)*self.orient_dir
-                self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
-                time.sleep(0.5)
-                self.pick_down = [j1,j2,j3,j4,j5,j6]
-                print("X error fixed")
-                return ( False , [j1,j2,j3,j4,j5,j6] )
-
-            else:
-                pass     
+            pass     
         
         
         return( True , [j1,j2,j3,j4,j5,j6] )
@@ -695,6 +694,7 @@ class UR5:
 
             if True :
                 result=self.give_coords( choice)
+                print("result : ", result)
                 
                 if result[-1]==result[-2]==result[-3]==0.0 :
                     pass

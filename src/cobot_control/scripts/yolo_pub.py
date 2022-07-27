@@ -75,6 +75,22 @@ class DNN :
     def publish(self, frame) :
         #frame = self.bridge.imgmsg_to_cv2(image, "bgr8")
         self.result, image = self.predict(frame)
+
+        self.bb.x1 = 0.0
+        self.bb.y1 = 0.0
+        self.bb.w1 = 0.0
+        self.bb.h1 = 0.0
+        self.bb.l1 = 0.0
+        self.bb.x2 = 0.0
+        self.bb.y2 = 0.0
+        self.bb.w2 = 0.0
+        self.bb.h2 = 0.0
+        self.bb.l2 = 0.0
+        self.bb.x3 = 0.0
+        self.bb.y3 = 0.0
+        self.bb.w3 = 0.0
+        self.bb.h3 = 0.0
+        self.bb.l3 = 0.0
         
         if len(self.result)==0 :
 
@@ -97,61 +113,159 @@ class DNN :
             self.bb.l3 = 0.0
 
         elif len(self.result)==1:
-            self.bb.x1 = self.result[0][0]
-            self.bb.y1 = self.result[0][1]
-            self.bb.w1 = self.result[0][2]
-            self.bb.h1 = self.result[0][3]
-            self.bb.l1 = self.result[0][4]
+            if self.result[0][4] == 0:
 
-            self.bb.x2 = 0.0
-            self.bb.y2 = 0.0
-            self.bb.w2 = 0.0
-            self.bb.h2 = 0.0
-            self.bb.l2 = 0.0
+                self.bb.x1 = self.result[0][0]
+                self.bb.y1 = self.result[0][1]
+                self.bb.w1 = self.result[0][2]
+                self.bb.h1 = self.result[0][3]
+                self.bb.l1 = self.result[0][4]
 
-            self.bb.x3 = 0.0
-            self.bb.y3 = 0.0
-            self.bb.w3 = 0.0
-            self.bb.h3 = 0.0
-            self.bb.l3 = 0.0
+            elif self.result[0][4] == 1:
+                self.bb.x2 = self.result[0][0]
+                self.bb.y2 = self.result[0][1]
+                self.bb.w2 = self.result[0][2]
+                self.bb.h2 = self.result[0][3]
+                self.bb.l2 = self.result[0][4]
+
+            elif self.result[0][4] == 2:
+                self.bb.x3 = self.result[0][0]
+                self.bb.y3 = self.result[0][1]
+                self.bb.w3 = self.result[0][2]
+                self.bb.h3 = self.result[0][3]
+                self.bb.l3 = self.result[0][4]
+            
+            else:
+                pass
+
+
+            
 
         elif len(self.result)==2:
-            self.bb.x1 = self.result[0][0]
-            self.bb.y1 = self.result[0][1]
-            self.bb.w1 = self.result[0][2]
-            self.bb.h1 = self.result[0][3]
-            self.bb.l1 = self.result[0][4]
 
-            self.bb.x2 = self.result[1][0]
-            self.bb.y2 = self.result[1][1]
-            self.bb.w2 = self.result[1][2]
-            self.bb.h2 = self.result[1][3]
-            self.bb.l2 = self.result[1][4]
+            if self.result[0][4] == 0:
 
-            self.bb.x3 = 0.0
-            self.bb.y3 = 0.0
-            self.bb.w3 = 0.0
-            self.bb.h3 = 0.0
-            self.bb.l3 = 0.0
+                self.bb.x1 = self.result[0][0]
+                self.bb.y1 = self.result[0][1]
+                self.bb.w1 = self.result[0][2]
+                self.bb.h1 = self.result[0][3]
+                self.bb.l1 = self.result[0][4]
+
+            elif self.result[0][4] == 1:
+                self.bb.x2 = self.result[0][0]
+                self.bb.y2 = self.result[0][1]
+                self.bb.w2 = self.result[0][2]
+                self.bb.h2 = self.result[0][3]
+                self.bb.l2 = self.result[0][4]
+
+            elif self.result[0][4] == 2:
+                self.bb.x3 = self.result[0][0]
+                self.bb.y3 = self.result[0][1]
+                self.bb.w3 = self.result[0][2]
+                self.bb.h3 = self.result[0][3]
+                self.bb.l3 = self.result[0][4]
+
+            else:
+                pass
+
+            if self.result[1][4] == 0:
+
+                self.bb.x1 = self.result[1][0]
+                self.bb.y1 = self.result[1][1]
+                self.bb.w1 = self.result[1][2]
+                self.bb.h1 = self.result[1][3]
+                self.bb.l1 = self.result[1][4]
+
+            elif self.result[1][4] == 1:
+                self.bb.x2 = self.result[1][0]
+                self.bb.y2 = self.result[1][1]
+                self.bb.w2 = self.result[1][2]
+                self.bb.h2 = self.result[1][3]
+                self.bb.l2 = self.result[1][4]
+
+            elif self.result[1][4] == 2:
+                self.bb.x3 = self.result[1][0]
+                self.bb.y3 = self.result[1][1]
+                self.bb.w3 = self.result[1][2]
+                self.bb.h3 = self.result[1][3]
+                self.bb.l3 = self.result[1][4]
+
+            else :
+                pass
 
         else:
-            self.bb.x1 = self.result[0][0]
-            self.bb.y1 = self.result[0][1]
-            self.bb.w1 = self.result[0][2]
-            self.bb.h1 = self.result[0][3]
-            self.bb.l1 = self.result[0][4]
 
-            self.bb.x2 = self.result[1][0]
-            self.bb.y2 = self.result[1][1]
-            self.bb.w2 = self.result[1][2]
-            self.bb.h2 = self.result[1][3]
-            self.bb.l2 = self.result[1][4]
+            if self.result[0][4] == 0:
 
-            self.bb.x3 = self.result[2][0]
-            self.bb.y3 = self.result[2][1]
-            self.bb.w3 = self.result[2][2]
-            self.bb.h3 = self.result[2][3]
-            self.bb.l3 = self.result[2][4]
+                self.bb.x1 = self.result[0][0]
+                self.bb.y1 = self.result[0][1]
+                self.bb.w1 = self.result[0][2]
+                self.bb.h1 = self.result[0][3]
+                self.bb.l1 = self.result[0][4]
+
+            elif self.result[0][4] == 1:
+                self.bb.x2 = self.result[0][0]
+                self.bb.y2 = self.result[0][1]
+                self.bb.w2 = self.result[0][2]
+                self.bb.h2 = self.result[0][3]
+                self.bb.l2 = self.result[0][4]
+
+            else:
+                self.bb.x3 = self.result[0][0]
+                self.bb.y3 = self.result[0][1]
+                self.bb.w3 = self.result[0][2]
+                self.bb.h3 = self.result[0][3]
+                self.bb.l3 = self.result[0][4]
+
+            if self.result[1][4] == 0:
+
+                self.bb.x1 = self.result[1][0]
+                self.bb.y1 = self.result[1][1]
+                self.bb.w1 = self.result[1][2]
+                self.bb.h1 = self.result[1][3]
+                self.bb.l1 = self.result[1][4]
+
+            elif self.result[1][4] == 1:
+                self.bb.x2 = self.result[1][0]
+                self.bb.y2 = self.result[1][1]
+                self.bb.w2 = self.result[1][2]
+                self.bb.h2 = self.result[1][3]
+                self.bb.l2 = self.result[1][4]
+
+            elif self.result[1][4] == 2:
+                self.bb.x3 = self.result[1][0]
+                self.bb.y3 = self.result[1][1]
+                self.bb.w3 = self.result[1][2]
+                self.bb.h3 = self.result[1][3]
+                self.bb.l3 = self.result[1][4]
+
+            else:
+                pass
+
+            if self.result[2][4] == 0:
+
+                self.bb.x1 = self.result[1][0]
+                self.bb.y1 = self.result[1][1]
+                self.bb.w1 = self.result[1][2]
+                self.bb.h1 = self.result[1][3]
+                self.bb.l1 = self.result[1][4]
+
+            elif self.result[2][4] == 1:
+                self.bb.x2 = self.result[2][0]
+                self.bb.y2 = self.result[2][1]
+                self.bb.w2 = self.result[2][2]
+                self.bb.h2 = self.result[2][3]
+                self.bb.l2 = self.result[2][4]
+
+            elif self.result[2][4] == 2:
+                self.bb.x3 = self.result[2][0]
+                self.bb.y3 = self.result[2][1]
+                self.bb.w3 = self.result[2][2]
+                self.bb.h3 = self.result[2][3]
+                self.bb.l3 = self.result[2][4]
+            else:
+                pass
+            
 
         self.pub.publish(self.bb)
         print("Published")
@@ -353,12 +467,23 @@ while True :
         ret, frame = cap.read()
         if ret :
             dnn = DNN()
-            image = dnn.publish(dec_brightness(frame),30)
-            print(image.shape)
+            image = dnn.publish(dec_brightness(frame,30))
+            cv2.line(image , (320 , 0) , (320 , 640) , (255,0,0) , 3)
+            cv2.line(image , (0 , 320) , (640 , 320) , (255,0,0) , 3)
+            cv2.putText(image, " Yellow : 0", (25,25), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 1, cv2.LINE_AA, False)
+
+            cv2.putText(image, " Cube : 1", (25,50), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 1, cv2.LINE_AA, False)
+
+            cv2.putText(image, " Arc : 2", (25,75), 
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0), 1, cv2.LINE_AA, False)
+
+            #print(image.shape)
             cv2.imshow("image", image)
             if cv2.waitKey(1) & 0xFF == ord('q') :
                 break
-    except :
+    except KeyboardInterrupt:
         print("error")
         cap.release()
         cv2.destroyAllWindows()
