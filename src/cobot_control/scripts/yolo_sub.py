@@ -373,9 +373,9 @@ class UR5:
         #print(self.x,self.y,self.w,self.h)
         obj_xcenter, obj_ycenter = self.x + self.w/2, self.y + self.h/2        
         linear_x , linear_y , linear_z = [0]*3 
-        if xcenter > obj_xcenter + self.w/2 :
+        if xcenter > obj_xcenter + self.w/4 :
             linear_x = -1
-        elif xcenter < obj_xcenter - self.w/2 :
+        elif xcenter < obj_xcenter - self.w/4 :
             linear_x = 1
         else:
             linear_x = 0
@@ -485,7 +485,7 @@ class UR5:
         #dnn_pos_x = DNN()
         #coords = self.give_coords(choice)
         #coords = result[choice]
-        print("pos_x_coords : ", self.obj_coords)
+        #print("pos_x_coords : ", self.obj_coords)
         pos_x_error = (self.obj_coords[0] + self.obj_coords[2]/2) - 320
 
         j1 -= (0.028)*pos_x_error
@@ -560,7 +560,7 @@ class UR5:
 
             elif result[2] == 0 :
                 BASE_ADJ =  self.count_y*(0.2)*self.dir_y
-                print(BASE_ADJ)
+                #print(BASE_ADJ)
                 j3 += self.count_y*(0.2)*(-self.dir_y)
                 #BASE_ADJ = self.count_y*(0.2)*dir*(-1)
                 #self.go_to_joint_state(j1,j2,j3,j4,j5,j6)
@@ -585,7 +585,7 @@ class UR5:
 
         if self.orient_start_iters == 0:
             self.init_width = w
-            print("init_width : ", self.init_width)
+            #print("init_width : ", self.init_width)
             if w > WIDTH_THRESH[choice] :  
                 print("start_orient")    
                 j6 += self.orient_start_fix
@@ -637,7 +637,7 @@ class UR5:
         if self.rotate_iters == 0:
             self.init_width = w
             #print("init_width : ", self.init_width)
-        print("w : ",w)
+        #print("w : ",w)
 
         if w > WIDTH_THRESH[choice] :
 
@@ -739,27 +739,31 @@ def main():
 
         ur5.go_to_joint_state(j01,j02,j03,j04,j05,j06)
         print("Pick Up")
-        time.sleep(5)
+        #time.sleep(5)
 
         ur5.fix_error(goalList[0])
         print("Alligned")
-        time.sleep(5)
+        time.sleep(2)
 
-        ur5.go_to_joint_state(ur5.pick_down[0] -  ur5.rotate_dir*ur5.rotate_iters*(0.15) , ur5.pick_down[1], ur5.pick_down[2], ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
-        print("Pick Down : ",ur5.pick_down)
-        time.sleep(5)
+        ur5.go_to_joint_state(ur5.pick_down[0] -  (-ur5.rotate_dir)*ur5.rotate_iters*(0.15) , ur5.pick_down[1], ur5.pick_down[2], ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
+        #print("Pick Down : ",ur5.pick_down)
+        #time.sleep(2)
 
-        ur5.go_to_joint_state(ur5.pick_down[0] - ur5.rotate_dir*ur5.rotate_iters*(0.15) , ur5.pick_down[1] + 21  , ur5.pick_down[2] - 21, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
+        ur5.go_to_joint_state(ur5.pick_down[0] - (-ur5.rotate_dir)*ur5.rotate_iters*(0.15) , ur5.pick_down[1] + 21  , ur5.pick_down[2] - 21, ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
         print("Pick Down")
         time.sleep(5)
 
-        ur5.go_to_joint_state(j01,j02,j03,j04,j05,j06)
+        ur5.go_to_joint_state(ur5.pick_down[0] - (-ur5.rotate_dir)*ur5.rotate_iters*(0.15) , ur5.pick_down[1] , ur5.pick_down[2] , ur5.pick_down[3] , ur5.pick_down[4]  ,ur5.pick_down[5])
         print("Pick Up")
-        time.sleep(5)
+        #time.sleep(5)
 
-        ur5.go_to_joint_state(j11,j12,j13,j14,j15,j16)
-        print("Drop Up")
-        time.sleep(5)
+        #ur5.go_to_joint_state(j01 + 30 ,j02, j03, j04, j05, j06)
+        #print("Drop Up")
+        #time.sleep(5)
+
+        ur5.go_to_joint_state(j01 + 30 ,j02 + 20, j03 - 20, j04, j05, j06)
+        print("Drop Down")
+        #time.sleep(5)
 
         #ur5.go_to_joint_state(j31,j32,j33,j34,j35,j36)
 
@@ -770,8 +774,8 @@ def main():
 
         return
     except KeyboardInterrupt:
-        cap.release()
-        cv2.destroyallwindows()   
+        
+           
     
         return
 

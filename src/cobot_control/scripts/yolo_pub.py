@@ -483,7 +483,9 @@ while True :
             cv2.imshow("image", image)
             if cv2.waitKey(1) & 0xFF == ord('q') :
                 break
-    except KeyboardInterrupt:
+    except :
         print("error")
-        cap.release()
-        cv2.destroyAllWindows()
+        
+
+cap.release()
+cv2.destroyAllWindows()
